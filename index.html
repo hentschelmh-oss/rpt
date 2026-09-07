@@ -85,12 +85,17 @@ input[type=number]{font-family:var(--mono)}
 .btn.ghost{border:1px solid var(--line);color:var(--mute);font-weight:500}
 .btn+.btn{margin-top:8px}
 
-/* ---- Pausen-Uhr ---- */
-.rest{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);
-  border-radius:12px;padding:12px 14px;margin:0 16px 14px}
-.rest .t{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em}
-.rest .lbl{font-size:12px;color:var(--mute);flex:1;line-height:1.35}
-.rest.ready .t{color:var(--green)}
+/* ---- Pausen-Uhr: klebt oben und bleibt beim Blättern sichtbar ---- */
+.clock{position:sticky;top:6px;z-index:30;display:flex;align-items:center;gap:12px;
+  background:rgba(28,35,40,.92);border:1px solid var(--amber);border-radius:12px;
+  padding:10px 8px 10px 14px;margin-bottom:14px;
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.clock .t{font-family:var(--mono);font-size:25px;font-weight:600;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums}
+.clock .lbl{font-size:12px;color:var(--mute);flex:1;line-height:1.3}
+.clock .x{color:var(--mute);font-size:15px;padding:6px 10px}
+.clock.ready{border-color:var(--green)}
+.clock.ready .t{color:var(--green)}
 
 /* ---- Hinweise ---- */
 .note{font-size:12.5px;line-height:1.5;color:var(--mute);background:var(--panel2);
@@ -141,10 +146,15 @@ input[type=number]{font-family:var(--mono)}
 .set.done .r u{text-decoration:none;color:var(--mute);font-size:14px;margin-left:2px}
 .set.fixing{border-color:var(--amber)}
 .set.fixing .fill{background:rgba(240,162,60,.16)}
+
+.card.running{border-color:var(--amber)}
+.card.running p{color:var(--amber)}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<audio id="ping" preload="auto" playsinline x-webkit-airplay="deny"
+  src="data:audio/wav;base64,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"></audio>
 <script>
 /* ============================================================
    RPT — Reverse Pyramid Training
@@ -163,6 +173,7 @@ const DEFAULTS = {
   // verworfen werden soll. Sonst sind Verlauf und Gewichte weg.
   v: 2,
   bw: 80,                                  // Körpergewicht für Klimmzüge
+  sound: true,                             // Signalton am Pausenende
   autoBackup: true,                        // nach jeder Einheit automatisch sichern
   plates: [20,15,10,5,2.5,1.25],           // verfügbare Scheiben je Seite
   days: [
@@ -249,6 +260,8 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 function render(){
   clearInterval(timer); timer = null;
   ({home:vHome, day:vDay, edit:vEdit, hist:vHist, histedit:vHistEdit, set:vSettings}[view.name])();
+  const ch = clockHTML();
+  if(ch) el.insertAdjacentHTML('afterbegin', ch), tick();
   window.scrollTo(0, view.keep || 0); view.keep = 0;
 }
 const head = (title, back) => `<div class="top">
@@ -322,8 +335,11 @@ function vHome(){
           <button data-go='{"name":"set"}' style="color:var(--amber);text-decoration:underline">
           In den Einstellungen sichern</button></div>` : ''}
     <div class="eyebrow" style="margin-bottom:10px">Training wählen</div>
-    ${st.days.map(d => `<button class="card" data-go='{"name":"day","id":"${d.id}"}'>
-      <h2>${esc(d.name)}</h2><p>${esc(d.sub)}<br>${last(d)}</p></button>`).join('')}
+    ${st.days.map(d => {
+      const running = st.sess && st.sess.dayId === d.id && st.sess.ex.some(e => e.reps.length);
+      return `<button class="card${running ? ' running' : ''}" data-go='{"name":"day","id":"${d.id}"}'>
+        <h2>${esc(d.name)}</h2><p>${esc(d.sub)}<br>${running ? 'läuft gerade' : last(d)}</p></button>`;
+     }).join('')}
     <div class="hr"></div>
     <button class="card" data-go='{"name":"hist"}'><h2>Verlauf</h2>
       <p>${st.log.length} abgeschlossene Einheiten</p></button>`;
@@ -331,9 +347,14 @@ function vHome(){
 
 function vDay(){
   const d = st.days.find(x => x.id===view.id);
-  if(!view.sess || view.sess.dayId !== d.id)
-    view.sess = { dayId:d.id, ex:d.ex.map(e => ({id:e.id, reps:[]})) };
-  const s = view.sess;
+  if(!st.sess || st.sess.dayId !== d.id){
+    if(st.sess && st.sess.ex.some(e => e.reps.length)
+       && !confirm('Es läuft noch eine Einheit an einem anderen Tag. Verwerfen?')){
+      view = {name:'day', id:st.sess.dayId}; return vDay();
+    }
+    st.sess = { dayId:d.id, ex:d.ex.map(e => ({id:e.id, reps:[], w:[]})) }; save();
+  }
+  const s = st.sess;
   const ready = e => e.top > 0 || e.mode === 'bw';          // ohne Gewicht nicht trainierbar
   const done = d.ex.every((e,i) => !ready(e) || s.ex[i].reps.length === e.sets)
             && s.ex.some(e => e.reps.length);
@@ -352,11 +373,13 @@ function vDay(){
       const w = min < 1 ? 62 + 38*(x.ratio-min)/(1-min) : 100;
       const state = x.n <= cur ? 'done' : x.n === cur+1 ? 'active' : '';
       const fixing = view.fix && view.fix.id === ex.id && view.fix.n === x.n;
+      const v = x.n <= cur && rec.w[x.n-1] != null ? rec.w[x.n-1] : x.val;
+      const tot = toTotal(ex, v, st.bw);
       return `<div class="set ${state}${fixing ? ' fixing' : ''}"
         ${x.n <= cur ? `data-fix="${ex.id}:${x.n}"` : ''}>
         <div class="fill" style="width:${w}%"></div>
         <div class="n">${x.n}</div>
-        <div class="w"><b>${label(ex, x.val)}</b><small>${sub(ex, x.val, x.total)}</small></div>
+        <div class="w"><b>${label(ex, v)}</b><small>${sub(ex, v, tot)}</small></div>
         <div class="r">${x.n <= cur ? '<em>'+rec.reps[x.n-1]+'</em> Wdh. <u>&#9998;</u>'
           : 'Ziel '+(x.n===1 ? ex.goal : '≥'+ex.goal)}</div></div>`;
     }).join('');
@@ -364,13 +387,23 @@ function vDay(){
     let body = '';
     const fixing = view.fix && view.fix.id === ex.id;
     if(fixing){
+      const n = view.fix.n;
+      const wv = rec.w[n-1] != null ? rec.w[n-1] : p[n-1].val;
       body = `<div class="entry">
         <div class="stepper">
+          <button data-wt="-1">−</button>
+          <div class="val" id="wv-${ex.id}">${fmt(wv)}<span>kg${ex.mode==='side' ? ' / Seite' : ''}</span></div>
+          <button data-wt="1">+</button>
+        </div>
+        <div class="stepper">
           <button data-rep="-1">−</button>
-          <div class="val" id="rv-${ex.id}">${rec.reps[view.fix.n-1]}<span>Wdh.</span></div>
+          <div class="val" id="rv-${ex.id}">${rec.reps[n-1]}<span>Wdh.</span></div>
           <button data-rep="1">+</button>
         </div>
-        <button class="btn primary" data-fixsave="${ex.id}">Satz ${view.fix.n} korrigieren</button>
+        ${n === 1 ? `<p style="font-size:12px;color:var(--mute);margin:0 0 10px;line-height:1.45">
+          Satz 1 ist der Anker. Änderst du hier das Gewicht, rechnen sich die
+          folgenden Sätze neu.</p>` : ''}
+        <button class="btn primary" data-fixsave="${ex.id}">Satz ${n} korrigieren</button>
         <button class="btn ghost" data-fixcancel="1">Abbrechen</button></div>`;
     } else if(cur < ex.sets){
       const guess = ex.goal + (cur>0 ? 1 : 0);
@@ -401,11 +434,7 @@ function vDay(){
         wären rechnerisch ${fmt(fromTotal(ex, t, st.bw))} kg${ex.mode==='side' ? ' je Seite' : ''} passend.
         Der Guide will dich bei Ziel bis Ziel−1 starten.</div>` + body;
     }
-    const restLeft = view.rest && view.rest.id === ex.id ? view.rest : null;
-    const clock = restLeft ? `<div class="rest ${restLeft.left<=0?'ready':''}" id="clock">
-        <div class="t">${mmss(restLeft.left)}</div>
-        <div class="lbl">${restLeft.left>0 ? 'Pause bis zum nächsten Satz' : 'Bereit — nächster Satz'}</div>
-        <button class="back" data-skip="1">Überspringen</button></div>` : '';
+    const clock = '';
 
     return `<div class="ex"><div class="ex-head"><h2>${esc(ex.name)}</h2>
       <div class="tag">${ex.sets}×${ex.goal}${ex.mode==='bw' && ex.top===0 ? ' · Körpergewicht' : ' · −'+fmt(ex.bd*100)+'%'}</div>
@@ -417,19 +446,71 @@ function vDay(){
       Klar getrennt vom Arbeitssatz.<br><b>Jeder Satz ist AMRAP</b> — so viele saubere Wdh. wie möglich.</div>` : '')
   + (done ? `<button class="btn primary" data-finish="1">Einheit abschließen</button>` : '');
 
-  if(view.rest) tick();
 }
 
 function mmss(s){ s = Math.max(0, Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+/* Die Uhr liegt im gespeicherten Zustand, nicht in der Ansicht. Dadurch
+   überlebt sie Navigation, App-Wechsel und sogar das Schließen der App:
+   gespeichert wird der Endzeitpunkt, nicht die Restzeit. */
+function clockHTML(){
+  if(!st.rest) return '';
+  const left = Math.round((st.rest.end - Date.now())/1000);
+  if(left < -900){ st.rest = null; save(); return ''; }        // nach 15 Min aufgeben
+  return `<div class="clock ${left<=0 ? 'ready' : ''}" id="clock">
+    <div class="t">${mmss(left)}</div>
+    <div class="lbl">${left > 0 ? 'Pause' : 'Bereit'} · ${esc(st.rest.name)}</div>
+    <button class="x" data-skip="1">&#10005;</button></div>`;
+}
+
+let beeped = false, audioReady = false, beepTimer = null;
+
+/* iOS: Web Audio schweigt bei aktivem Stummschalter, ein <audio>-Element nicht.
+   Zusätzlich sagt audioSession dem System, dass Ton hier gewollt ist.
+   Das Element muss einmal in einer Nutzeraktion angestoßen worden sein. */
+try { if(navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
+
+function unlockAudio(){
+  if(audioReady) return; audioReady = true;
+  const el = document.getElementById('ping'); if(!el) return;
+  el.muted = true;
+  const pr = el.play();
+  if(pr && pr.then) pr.then(() => { el.pause(); el.currentTime = 0; el.muted = false; })
+                      .catch(() => { el.muted = false; });
+  else { el.pause(); el.currentTime = 0; el.muted = false; }
+}
+
+function beep(){
+  if(beeped || st.sound === false) return; beeped = true;
+  const el = document.getElementById('ping'); if(!el) return;
+  try { el.currentTime = 0; const pr = el.play(); if(pr && pr.catch) pr.catch(() => {}); } catch(e){}
+}
+
+// Zusätzlich exakt auf die Sekunde legen, falls der 500-ms-Takt gedrosselt wird
+function scheduleBeep(){
+  clearTimeout(beepTimer);
+  if(!st.rest || st.sound === false) return;
+  const ms = st.rest.end - Date.now();
+  if(ms > 0 && ms < 36e5) beepTimer = setTimeout(beep, ms);
+}
+
 function tick(){
   timer = setInterval(() => {
-    if(!view.rest) return clearInterval(timer);
-    view.rest.left = Math.round((view.rest.end - Date.now())/1000);
-    const c = document.getElementById('clock'); if(!c) return clearInterval(timer);
-    c.querySelector('.t').textContent = mmss(view.rest.left);
-    if(view.rest.left <= 0){ c.classList.add('ready'); c.querySelector('.lbl').textContent = 'Bereit — nächster Satz'; clearInterval(timer); }
+    const c = document.getElementById('clock');
+    if(!st.rest || !c) return clearInterval(timer);
+    const left = Math.round((st.rest.end - Date.now())/1000);
+    c.querySelector('.t').textContent = mmss(left);
+    if(left <= 0){
+      c.classList.add('ready');
+      c.querySelector('.lbl').textContent = 'Bereit · ' + st.rest.name;
+      beep(); clearInterval(timer);
+    }
   }, 500);
 }
+
+// Rückkehr aus dem Hintergrund: Uhr sofort auf den echten Stand bringen
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && st.rest){ scheduleBeep(); render(); }
+});
 
 function vEdit(){
   const d = st.days.find(x => x.id===view.dayId), ex = d.ex.find(e => e.id===view.id);
@@ -476,6 +557,9 @@ function vSettings(){
           iCloud Drive — sonst ist der Verlauf weg, wenn das Symbol vom Home-Bildschirm
           fliegt oder iOS den Speicher aufräumt.${st.lastBackup ?
             ' Letzte Sicherung: '+new Date(st.lastBackup).toLocaleDateString('de-DE')+'.' : ''}</p>
+        <button class="toggle" style="margin-bottom:10px" data-sound="1">
+          <span><b>Signalton am Pausenende</b><small>zwei kurze Töne</small></span>
+          <i class="sw ${st.sound !== false ? 'on' : ''}"></i></button>
         <button class="toggle" data-auto="1">
           <span><b>Nach jedem Training sichern</b><small>legt die Datei automatisch ab</small></span>
           <i class="sw ${st.autoBackup !== false ? 'on' : ''}"></i></button>
@@ -558,13 +642,14 @@ function vHist(){
 
 /* ---------- Interaktion ---------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-edit],[data-rep],[data-log],[data-finish],[data-savex],[data-savebw],[data-skip],[data-backup],[data-auto],[data-fix],[data-fixsave],[data-fixcancel],[data-hist],[data-hfix],[data-hsave],[data-hdel]');
+  unlockAudio();
+  const t = e.target.closest('[data-go],[data-edit],[data-rep],[data-wt],[data-log],[data-finish],[data-savex],[data-savebw],[data-skip],[data-backup],[data-auto],[data-sound],[data-fix],[data-fixsave],[data-fixcancel],[data-hist],[data-hfix],[data-hsave],[data-hdel]');
   if(!t) return;
 
   if(t.dataset.go){ const g = JSON.parse(t.dataset.go); view.fix = null;
-    if(g.name!=='day') view.sess=null, view.rest=null; view = Object.assign(g, {sess:view.sess, rest:view.rest}); return render(); }
-  if(t.dataset.edit){ view = {name:'edit', id:t.dataset.edit, dayId:view.id, sess:view.sess, rest:view.rest}; return render(); }
-  if(t.dataset.skip){ view.rest = null; return render(); }
+    view = g; return render(); }
+  if(t.dataset.edit){ view = {name:'edit', id:t.dataset.edit, dayId:view.id}; return render(); }
+  if(t.dataset.skip){ st.rest = null; save(); clearTimeout(beepTimer); return render(); }
 
   if(t.dataset.fix){
     const [id, n] = t.dataset.fix.split(':');
@@ -589,9 +674,27 @@ document.addEventListener('click', e => {
     view = {name:'hist'}; return render();
   }
   if(t.dataset.fixsave){
-    const rec = view.sess.ex.find(x => x.id === t.dataset.fixsave);
-    rec.reps[view.fix.n-1] = parseInt(document.getElementById('rv-'+t.dataset.fixsave).firstChild.textContent) || 0;
-    view.fix = null; view.keep = window.scrollY; return render();   // Pausenuhr läuft weiter
+    const id = t.dataset.fixsave, n = view.fix.n;
+    const rec = st.sess.ex.find(x => x.id === id), ex = findEx(id);
+    rec.reps[n-1] = parseInt(document.getElementById('rv-'+id).firstChild.textContent) || 0;
+    const nw = parseFloat(document.getElementById('wv-'+id).firstChild.textContent.replace(',','.'));
+    if(!isNaN(nw)){
+      rec.w[n-1] = nw;
+      if(n === 1){                                  // Anker verschoben: Rest neu rechnen
+        ex.top = nw; save();
+        const np = plan(ex);
+        for(let k = 1; k < rec.w.length; k++) rec.w[k] = np[k].val;
+      }
+    }
+    save(); view.fix = null; view.keep = window.scrollY; return render();   // Pausenuhr läuft weiter
+  }
+
+  if(t.dataset.wt){
+    const ex = findEx(view.fix.id);
+    const box = t.parentElement.querySelector('.val');
+    const cur = parseFloat(box.firstChild.textContent.replace(',','.')) || 0;
+    box.firstChild.textContent = fmt(Math.max(0, round(cur + parseInt(t.dataset.wt)*ex.step, ex.step)));
+    return;
   }
 
   if(t.dataset.rep){
@@ -603,8 +706,13 @@ document.addEventListener('click', e => {
   if(t.dataset.log){
     const d = st.days.find(x => x.id===view.id), ex = d.ex.find(x => x.id===t.dataset.log);
     const reps = parseInt(document.getElementById('rv-'+ex.id).firstChild.textContent) || 0;
-    view.sess.ex.find(x => x.id===ex.id).reps.push(reps);
-    view.rest = { id:ex.id, end:Date.now() + ex.rest*1000, left:ex.rest };
+    const rec = st.sess.ex.find(x => x.id===ex.id);
+    rec.reps.push(reps);
+    rec.w.push(plan(ex)[rec.reps.length-1].val);        // Gewicht des Satzes festhalten
+    beeped = false;
+    st.rest = { id:ex.id, name:ex.name, end:Date.now() + ex.rest*1000 };
+    save();                                             // Einheit und Uhr überstehen App-Wechsel
+    scheduleBeep();
     view.keep = window.scrollY;
     return render();
   }
@@ -613,7 +721,7 @@ document.addEventListener('click', e => {
     const d = st.days.find(x => x.id===view.id);
     const entry = { date:new Date().toISOString(), dayId:d.id, dayName:d.name, ex:[] };
     d.ex.forEach((ex, i) => {
-      const reps = view.sess.ex[i].reps; if(!reps.length) return;
+      const reps = st.sess.ex[i].reps; if(!reps.length) return;
       const p = plan(ex), oldTop = ex.top;
       if(ex.mode === 'bw' && ex.top === 0){
         // Guide: ab 10 sauberen Wdh. mit Körpergewicht auf +5 kg umsteigen
@@ -621,9 +729,14 @@ document.addEventListener('click', e => {
       } else if(reps[0] > ex.goal){
         ex.top = round(ex.top + ex.inc, ex.step);                       // doppelte Progression
       }
+      const used = st.sess.ex[i].w;
       entry.ex.push({ id:ex.id, name:ex.name, oldTop, newTop:ex.top, mode:ex.mode,
-        sets: reps.map((r, n) => ({ val:p[n].val, total:p[n].total, reps:r })) });
+        sets: reps.map((r, n) => {
+          const v = used[n] != null ? used[n] : p[n].val;
+          return { val:v, total:toTotal(ex, v, st.bw), reps:r };
+        }) });
     });
+    st.sess = null; st.rest = null;
     st.log.push(entry); save();
     if(st.autoBackup !== false) backup();     // direkt im Klick, sonst blockt iOS den Download
     view = {name:'home'}; return render();
@@ -635,7 +748,7 @@ document.addEventListener('click', e => {
     ex.top = num('f-top'); ex.goal = Math.max(1, num('f-goal')); ex.sets = Math.min(5, Math.max(1, num('f-sets')));
     ex.bd = parseFloat(document.getElementById('f-bd').value); ex.mode = document.getElementById('f-mode').value;
     ex.bar = num('f-bar'); ex.step = num('f-step') || 1.25; ex.inc = num('f-inc') || ex.step; ex.rest = num('f-rest') || 180;
-    save(); view = {name:'day', id:d.id, sess:view.sess, rest:view.rest}; return render();
+    save(); view = {name:'day', id:d.id}; return render();
   }
 
   if(t.dataset.savebw){
@@ -647,6 +760,11 @@ document.addEventListener('click', e => {
 
   if(t.dataset.backup){ backup(); setTimeout(render, 300); }
   if(t.dataset.auto){ st.autoBackup = !(st.autoBackup !== false); save(); return render(); }
+  if(t.dataset.sound){
+    st.sound = !(st.sound !== false); save();
+    if(st.sound){ beeped = false; beep(); beeped = false; scheduleBeep(); }   // einmal vorhören
+    return render();
+  }
 });
 
 /* Sicherung anstossen. iOS legt die Datei dort ab, was unter
@@ -686,6 +804,7 @@ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().c
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 render();
+scheduleBeep();
 </script>
 </body>
 </html>
