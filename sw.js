@@ -1,5 +1,5 @@
 /* Cache-first: die App startet auch komplett ohne Netz. */
-const CACHE = 'rpt-v1';
+const CACHE = 'rpt-v3';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
