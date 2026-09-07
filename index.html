@@ -149,6 +149,32 @@ input[type=number]{font-family:var(--mono)}
 
 .card.running{border-color:var(--amber)}
 .card.running p{color:var(--amber)}
+
+/* ---- Figur ---- */
+.hero{display:flex;gap:16px;align-items:center;background:var(--panel);
+  border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.hero .fig{flex:none;background:var(--panel2);border-radius:10px;padding:8px 6px}
+.hero .meta{flex:1;min-width:0}
+.hero .big{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.03em;
+  margin:4px 0 8px;line-height:1}
+.hero .big span{font-size:11px;color:var(--mute);font-weight:400;letter-spacing:.04em}
+.hero .bar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.hero .bar i{display:block;height:100%;background:var(--amber);border-radius:99px}
+.hero .hint{font-size:11.5px;color:var(--mute);margin-top:6px}
+/* ---- Übungsauswahl ---- */
+.chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:4px;
+  -webkit-overflow-scrolling:touch}
+.chip{flex:none;font-size:12.5px;padding:7px 12px;border-radius:99px;
+  border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.chip.on{border-color:var(--amber);color:var(--amber)}
+
+.mg{display:flex;align-items:center;gap:10px;padding:4px 0;font-size:13px}
+.mg span{flex:1;color:var(--mute)}
+.mg i{display:flex;gap:3px;flex:none}
+.mg i b{width:22px;height:6px;border-radius:2px;background:var(--panel2);display:block}
+.mg i b.on{background:var(--amber)}
+.mg em{font-style:normal;font-family:var(--mono);font-size:12px;color:var(--mute);
+  width:26px;text-align:right}
 </style>
 </head>
 <body>
@@ -178,19 +204,19 @@ const DEFAULTS = {
   plates: [20,15,10,5,2.5,1.25],           // verfügbare Scheiben je Seite
   days: [
     { id:'d1', name:'Tag 1', sub:'Deadlift · Overhead Press · Bizeps', ex:[
-      {id:'dl',  name:'Deadlift',       goal:6,  sets:2, bd:.10, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:240},
-      {id:'ohp', name:'Overhead Press', goal:8,  sets:3, bd:.05, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:180},
-      {id:'bi1', name:'Bizeps',         goal:10, sets:2, bd:.10, mode:'side', bar:0,  top:0,     step:1.25, inc:1.25, rest:90},
+      {id:'dl',  name:'Deadlift',       goal:6,  sets:2, bd:.10, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:240, mg:['bk','lg']},
+      {id:'ohp', name:'Overhead Press', goal:8,  sets:3, bd:.05, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:180, mg:['sh']},
+      {id:'bi1', name:'Bizeps',         goal:10, sets:2, bd:.10, mode:'side', bar:0,  top:0,     step:1.25, inc:1.25, rest:90, mg:['ar']},
     ]},
     { id:'d2', name:'Tag 2', sub:'Bankdrücken · Seal Row · Trizeps', ex:[
-      {id:'bp',  name:'Bankdrücken',    goal:8,  sets:3, bd:.05, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:180},
-      {id:'sr',  name:'Seal Row',       goal:8,  sets:3, bd:.05, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:180},
-      {id:'tri', name:'Trizeps',        goal:10, sets:2, bd:.10, mode:'total',bar:0,  top:0,     step:1,    inc:1,    rest:90},
+      {id:'bp',  name:'Bankdrücken',    goal:8,  sets:3, bd:.05, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:180, mg:['ch','sh']},
+      {id:'sr',  name:'Seal Row',       goal:8,  sets:3, bd:.05, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:180, mg:['bk','ar']},
+      {id:'tri', name:'Trizeps',        goal:10, sets:2, bd:.10, mode:'total',bar:0,  top:0,     step:1,    inc:1,    rest:90, mg:['ar']},
     ]},
     { id:'d3', name:'Tag 3', sub:'Squat · Klimmzüge · Bizeps', ex:[
-      {id:'sq',  name:'Squat',          goal:10, sets:3, bd:.10, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:240},
-      {id:'cu',  name:'Klimmzüge',      goal:8,  sets:3, bd:.10, mode:'bw',   bar:0,  top:0,     step:1.25, inc:1.25, rest:180},
-      {id:'bi2', name:'Bizeps',         goal:10, sets:2, bd:.10, mode:'side', bar:0,  top:0,     step:1.25, inc:1.25, rest:90},
+      {id:'sq',  name:'Squat',          goal:10, sets:3, bd:.10, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:240, mg:['lg']},
+      {id:'cu',  name:'Klimmzüge',      goal:8,  sets:3, bd:.10, mode:'bw',   bar:0,  top:0,     step:1.25, inc:1.25, rest:180, mg:['bk','ar']},
+      {id:'bi2', name:'Bizeps',         goal:10, sets:2, bd:.10, mode:'side', bar:0,  top:0,     step:1.25, inc:1.25, rest:90, mg:['ar']},
     ]},
   ],
   log: []   // { date, dayId, ex:[{id,name,sets:[{val,total,reps}],oldTop,newTop}] }
@@ -224,9 +250,12 @@ function fromTotal(ex, total, bw){
 
 // Die Pyramide: Satz 1 ist der Anker, alle anderen hängen daran
 function plan(ex){
-  const t1 = toTotal(ex, ex.top, st.bw), out = [];
+  // Deload-Tag: Guide empfiehlt Deload-Tage statt -wochen, alle Lasten −15 %
+  const dl = st.sess && st.sess.deload ? .85 : 1;
+  const t1 = toTotal(ex, ex.top, st.bw) * dl, out = [];
   for(let n=1; n<=ex.sets; n++){
-    const val = n===1 ? ex.top : fromTotal(ex, t1*(1 - ex.bd*(n-1)), st.bw);
+    const val = n===1 ? (dl < 1 ? fromTotal(ex, t1, st.bw) : ex.top)
+                      : fromTotal(ex, t1*(1 - ex.bd*(n-1)), st.bw);
     out.push({ n, val, total: toTotal(ex, val, st.bw), ratio: t1>0 ? toTotal(ex,val,st.bw)/t1 : 1 });
   }
   return out;
@@ -259,7 +288,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 function render(){
   clearInterval(timer); timer = null;
-  ({home:vHome, day:vDay, edit:vEdit, hist:vHist, histedit:vHistEdit, set:vSettings}[view.name])();
+  ({home:vHome, day:vDay, edit:vEdit, hist:vHist, histedit:vHistEdit, prog:vProg, set:vSettings}[view.name])();
   const ch = clockHTML();
   if(ch) el.insertAdjacentHTML('afterbegin', ch), tick();
   window.scrollTo(0, view.keep || 0); view.keep = 0;
@@ -319,6 +348,209 @@ function habit(){
       <span>${gap}</span></div></div>`;
 }
 
+/* ============================================================
+   Fortschritt: Pixel-Figur, Kraftkurve, geschätztes 1RM
+   Die Figur wächst an Gewichtssteigerungen, nicht an Volumen.
+   Bewusst so: der Guide rät bei diesem Programm von mehr Volumen ab,
+   belohnt werden soll genau das, was RPT will — schwerer werden.
+   ============================================================ */
+/* Die Figur wird gezeichnet, nicht aus einem festen Raster kopiert:
+   jede Muskelgruppe hat eine eigene Stufe 0–3 und verändert Form und Breite. */
+const PAL = {K:'#465057', k:'#2F373D', G:'#B8923F', H:'#33251E', S:'#E2B491',
+             e:'#2A1E18', D:'#2E221B', M:'#8C4B46', C:'#2C3238', c:'#3A4249',
+             P:'#222A30', p:'#2D363D', B:'#151A1E', E:'#8A5A2B', W:'#E8EDF0',
+             '-':'#8A99A3', '#':'#F0A23C'};
+const SW = 30, SH_ = 32, CX = 15, BARY = 22;
+const GROUPS = { sh:'Schultern', ch:'Brust', ar:'Arme', bk:'Rücken', lg:'Beine' };
+
+function spriteSVG(level, m, px){
+  const g = Array.from({length:SH_}, () => Array(SW).fill('.'));
+  const span = (y, half, ch) => { for(let x=CX-half; x<CX+half; x++) g[y][x] = ch; };
+  const {sh, ch, ar, bk, lg} = m;
+
+  span(1,4,'K'); span(2,5,'K'); span(3,5,'K'); span(4,5,'k'); g[4][CX+4] = 'G';
+  span(5,4,'H'); span(6,4,'S');
+  for(let x=CX-4; x<CX-1; x++) g[7][x] = 'H';
+  for(let x=CX+1; x<CX+4; x++) g[7][x] = 'H';
+  span(8,4,'S'); g[8][CX-3] = 'e'; g[8][CX+2] = 'e';
+  span(9,4,'S'); span(10,4,'S'); g[10][CX-4] = 'D'; g[10][CX+3] = 'D';
+  span(11,4,'D'); g[11][CX-1] = 'M'; g[11][CX] = 'M';
+  span(12,3,'D'); span(13,2,'S');
+  for(let d=0; d<bk; d++){ g[13][CX-3-d] = 'c'; g[13][CX+2+d] = 'c'; }   // Trapez
+
+  const SHW = 6+sh, CHW = 6+ch;
+  [[14,SHW],[15,SHW],[16,CHW],[17,CHW],[18,6],[19,6],[20,6],[21,6]]
+    .forEach(([y,half]) => span(y, half, 'C'));
+  if(ch >= 1) for(let x=CX-CHW+1; x<CX+CHW-1; x++) g[16][x] = 'c';
+  if(ch >= 2) for(let x=CX-CHW+1; x<CX+CHW-1; x++) g[17][x] = 'c';
+
+  const edge = Math.max(SHW, CHW);                       // Ärmel bis Zeile 16, dann blank
+  const aw = 1 + (ar>=1 ? 1:0) + (ar>=3 ? 1:0);
+  for(let y=14; y<=BARY; y++){
+    const w = aw + ((ar>=2 && (y===18 || y===19)) ? 1 : 0);
+    const col = y <= 16 ? 'C' : 'S';
+    for(let d=0; d<w; d++){ g[y][CX-edge-1-d] = col; g[y][CX+edge+d] = col; }
+  }
+
+  for(let y=23; y<28; y++){
+    for(let x=CX-6-lg; x<CX-1; x++) g[y][x] = 'P';
+    for(let x=CX+1; x<CX+6+lg; x++) g[y][x] = 'P';
+  }
+  if(lg >= 2){
+    for(let x=CX-5-lg; x<CX-2; x++) g[24][x] = 'p';
+    for(let x=CX+2; x<CX+5+lg; x++) g[24][x] = 'p';
+  }
+  for(const y of [28,29]){
+    for(let x=CX-5; x<CX-1; x++) g[y][x] = 'S';
+    for(let x=CX+1; x<CX+5; x++) g[y][x] = 'S';
+  }
+  for(let x=CX-6; x<CX-1; x++) g[30][x] = 'B';
+  for(let x=CX+1; x<CX+6; x++) g[30][x] = 'B';
+
+  if(level >= 5) span(21, 6, 'E');
+  if(level >= 7) for(const y of [21, BARY])
+    for(let d=0; d<aw; d++){ g[y][CX-edge-1-d] = 'W'; g[y][CX+edge+d] = 'W'; }
+
+  for(let x=1; x<SW-1; x++) if(g[BARY][x] === '.') g[BARY][x] = '-';
+  const ph = [1,1,3,3,3,5,5,5,5,5][Math.min(level,10)-1], pw = level < 7 ? 2 : 3;
+  const cols = [];
+  for(let i=1; i<1+pw; i++){ cols.push(i); cols.push(SW-1-i); }
+  for(let dy=-Math.floor(ph/2); dy<=Math.floor(ph/2); dy++){
+    const y = BARY+dy; if(y<0 || y>=SH_) continue;
+    cols.forEach(x => { g[y][x] = '#'; });
+  }
+
+  let r = '';
+  g.forEach((row, y) => row.forEach((c, x) => {
+    if(PAL[c]) r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${PAL[c]}"/>`;
+  }));
+  return `<svg viewBox="0 0 ${SW} ${SH_}" width="${px}" shape-rendering="crispEdges"
+    style="display:block">${r}</svg>`;
+}
+
+const TIERS = [0, 8, 20, 38, 62, 95, 140, 200, 280, 380];
+const RANKS = ['Erste Sätze','Eingespielt','Erste Scheiben','Fester Stand','Gürtel',
+               'Solide','Bandagen','Schwere Scheiben','Routiniert','Alte Schule'];
+
+// Steigerungen je Übung
+function gains(){
+  const c = {};
+  st.log.forEach(l => { if(l.deload) return;
+    l.ex.forEach(e => { if(e.newTop > e.oldTop) c[e.id] = (c[e.id]||0) + 1; }); });
+  return c;
+}
+// Jede Gewichtssteigerung zählt einen Punkt für die Gesamtstufe
+function xp(){ return Object.values(gains()).reduce((a,b) => a+b, 0); }
+function levelOf(x){ let lv = 1; TIERS.forEach((t,i) => { if(x >= t) lv = i+1; }); return lv; }
+
+// Je Muskelgruppe der Schnitt über die beitragenden Übungen
+function muscles(){
+  const c = gains(), sum = {}, n = {};
+  st.days.forEach(d => d.ex.forEach(e => (e.mg||[]).forEach(k => {
+    sum[k] = (sum[k]||0) + (c[e.id]||0); n[k] = (n[k]||0) + 1;
+  })));
+  const out = {};
+  Object.keys(GROUPS).forEach(k => {
+    const avg = n[k] ? sum[k]/n[k] : 0;
+    out[k] = avg >= 16 ? 3 : avg >= 8 ? 2 : avg >= 3 ? 1 : 0;
+    out[k+'_avg'] = avg;
+  });
+  return out;
+}
+
+function hero(){
+  const x = xp(), lv = levelOf(x);
+  const next = TIERS[lv] != null ? TIERS[lv] : null;
+  const base = TIERS[lv-1];
+  const pct = next ? Math.round((x - base) / (next - base) * 100) : 100;
+  return `<div class="hero">
+    <div class="fig">${spriteSVG(lv, muscles(), 88)}</div>
+    <div class="meta">
+      <div class="eyebrow">Stufe ${lv} · ${esc(RANKS[lv-1])}</div>
+      <div class="big">${x}<span> Steigerungen</span></div>
+      ${next ? `<div class="bar"><i style="width:${pct}%"></i></div>
+        <div class="hint">noch ${next - x} bis Stufe ${lv+1}</div>`
+        : `<div class="hint">Höchste Stufe erreicht.</div>`}
+    </div></div>`;
+}
+
+/* ---- Kurven ---- */
+function series(exId){
+  const out = [];
+  st.log.forEach(l => {
+    if(l.deload) return;                            // Deload verzerrt die Kurve
+    const e = l.ex.find(x => x.id === exId);
+    if(!e || !e.sets.length) return;
+    const s1 = e.sets[0];
+    out.push({ w: s1.val, rm: s1.total * (1 + s1.reps/30),
+               d: new Date(l.date), reps: s1.reps });
+  });
+  return out;
+}
+
+function chart(pts, key, unit){
+  if(pts.length < 2) return `<div class="empty" style="padding:22px">
+    Ab der zweiten Einheit entsteht hier eine Kurve.</div>`;
+  const W = 300, H = 118, L = 38, R = 8, T = 12, B = 20;
+  const ys = pts.map(p => p[key]);
+  let lo = Math.min(...ys), hi = Math.max(...ys);
+  if(hi === lo){ hi = lo + 1; lo = lo - 1; }
+  const pad = (hi - lo) * .18; lo -= pad; hi += pad;
+  const X = i => L + (W-L-R) * (i / (pts.length - 1));
+  const Y = v => T + (H-T-B) * (1 - (v - lo) / (hi - lo));
+  const line = pts.map((p,i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(p[key]).toFixed(1)}`).join('');
+  const dots = pts.map((p,i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(p[key]).toFixed(1)}"
+    r="2.6" fill="var(--amber)"/>`).join('');
+  const grid = [hi, (hi+lo)/2, lo].map(v => `
+    <line x1="${L}" y1="${Y(v).toFixed(1)}" x2="${W-R}" y2="${Y(v).toFixed(1)}"
+      stroke="var(--line)" stroke-width=".7"/>
+    <text x="${L-6}" y="${(Y(v)+3.5).toFixed(1)}" text-anchor="end"
+      font-size="9" fill="var(--mute)" font-family="var(--mono)">${fmt(Math.round(v*10)/10)}</text>`).join('');
+  const dt = d => d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block">
+    ${grid}
+    <path d="${line}" fill="none" stroke="var(--amber)" stroke-width="2"
+      stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    <text x="${L}" y="${H-6}" font-size="9" fill="var(--mute)" font-family="var(--mono)">${dt(pts[0].d)}</text>
+    <text x="${W-R}" y="${H-6}" text-anchor="end" font-size="9" fill="var(--mute)"
+      font-family="var(--mono)">${dt(pts[pts.length-1].d)}</text>
+  </svg>`;
+}
+
+function vProg(){
+  const all = [];
+  st.days.forEach(d => d.ex.forEach(e => all.push(e)));
+  const id = view.ex || (all.find(e => series(e.id).length) || all[0]).id;
+  const ex = findEx(id), pts = series(id);
+  const unit = ex.mode === 'side' ? 'kg je Seite' : 'kg';
+
+  el.innerHTML = head('Fortschritt', '{"name":"home"}')
+   + hero()
+   + (() => { const mm = muscles();
+       return `<div class="ex" style="padding:14px 16px;margin-bottom:12px">
+         <div class="eyebrow" style="margin-bottom:10px">Woran du gearbeitet hast</div>
+         ${Object.keys(GROUPS).map(k => `<div class="mg">
+           <span>${GROUPS[k]}</span>
+           <i>${[0,1,2,3].map(n => `<b class="${n && n <= mm[k] ? 'on' : ''}"></b>`).slice(1).join('')}</i>
+           <em>${mm[k+'_avg'].toFixed(1)}</em></div>`).join('')}
+         <p style="font-size:11.5px;color:var(--mute);margin:10px 0 0;line-height:1.45">
+           Schnitt der Gewichtssteigerungen je beitragender Übung. Drei Stufen bei
+           3, 8 und 16.</p></div>`;
+     })()
+   + `<div class="chips">${all.map(e => `<button class="chip${e.id===id ? ' on' : ''}"
+        data-ex="${e.id}">${esc(e.name)}</button>`).join('')}</div>`
+   + `<div class="ex" style="padding:14px 12px 8px">
+        <div class="eyebrow" style="padding:0 4px 6px">Arbeitsgewicht Satz 1 · ${unit}</div>
+        ${chart(pts, 'w')}</div>`
+   + `<div class="ex" style="padding:14px 12px 8px">
+        <div class="eyebrow" style="padding:0 4px 6px">Geschätztes 1RM · kg Gesamtlast</div>
+        ${chart(pts, 'rm')}</div>`
+   + `<div class="note">Das 1RM ist nach Epley geschätzt und berücksichtigt Gewicht und
+      Wiederholungen von Satz 1. Es steigt auch dann, wenn das Gewicht gleich bleibt und
+      du mehr Wiederholungen schaffst. Deload-Tage sind ausgenommen.</div>`;
+}
+
 function vHome(){
   const last = d => {
     const e = [...st.log].reverse().find(x => x.dayId===d.id);
@@ -328,6 +560,7 @@ function vHome(){
   };
   el.innerHTML = `<div class="top"><h1>Reverse&nbsp;Pyramid</h1>
       <button class="back" data-go='{"name":"set"}'>Einstellungen</button></div>
+    ${hero()}
     ${habit()}
     ${st.log.length >= 4 && (!st.lastBackup || Date.now()-st.lastBackup > 28*864e5)
       ? `<div class="note" style="margin:0 0 14px"><b>Zeit für eine Sicherung.</b>
@@ -341,6 +574,8 @@ function vHome(){
         <h2>${esc(d.name)}</h2><p>${esc(d.sub)}<br>${running ? 'läuft gerade' : last(d)}</p></button>`;
      }).join('')}
     <div class="hr"></div>
+    <button class="card" data-go='{"name":"prog"}'><h2>Fortschritt</h2>
+      <p>Kraftkurven und geschätztes 1RM je Übung</p></button>
     <button class="card" data-go='{"name":"hist"}'><h2>Verlauf</h2>
       <p>${st.log.length} abgeschlossene Einheiten</p></button>`;
 }
@@ -359,7 +594,12 @@ function vDay(){
   const done = d.ex.every((e,i) => !ready(e) || s.ex[i].reps.length === e.sets)
             && s.ex.some(e => e.reps.length);
 
-  el.innerHTML = head(d.name, '{"name":"home"}') + d.ex.map((ex, i) => {
+  const started = s.ex.some(e => e.reps.length);
+  el.innerHTML = head(d.name, '{"name":"home"}')
+   + (started && !s.deload ? '' : `<button class="toggle" style="margin-bottom:12px" data-deload="1">
+        <span><b>Deload-Tag</b><small>alle Lasten −15 %, keine Steigerung</small></span>
+        <i class="sw ${s.deload ? 'on' : ''}"></i></button>`)
+   + d.ex.map((ex, i) => {
     const p = plan(ex), rec = s.ex[i];
     if(ex.top === 0 && ex.mode !== 'bw')
       return `<div class="ex"><div class="ex-head"><h2>${esc(ex.name)}</h2>
@@ -381,7 +621,7 @@ function vDay(){
         <div class="n">${x.n}</div>
         <div class="w"><b>${label(ex, v)}</b><small>${sub(ex, v, tot)}</small></div>
         <div class="r">${x.n <= cur ? '<em>'+rec.reps[x.n-1]+'</em> Wdh. <u>&#9998;</u>'
-          : 'Ziel '+(x.n===1 ? ex.goal : '≥'+ex.goal)}</div></div>`;
+          : x.n === 1 ? 'Ziel '+ex.goal : 'AMRAP'}</div></div>`;
     }).join('');
 
     let body = '';
@@ -406,7 +646,11 @@ function vDay(){
         <button class="btn primary" data-fixsave="${ex.id}">Satz ${n} korrigieren</button>
         <button class="btn ghost" data-fixcancel="1">Abbrechen</button></div>`;
     } else if(cur < ex.sets){
-      const guess = ex.goal + (cur>0 ? 1 : 0);
+      // Vorschlag aus der letzten Einheit, nicht Ziel+1: der Guide warnt
+      // ausdrücklich davor, Sätze 2+ als "vorheriger Satz +1" zu verstehen
+      const prev = [...st.log].reverse().find(l => l.ex.some(e => e.id===ex.id));
+      const pe = prev && prev.ex.find(e => e.id===ex.id);
+      const guess = pe && pe.sets[cur] ? pe.sets[cur].reps : ex.goal;
       body = `<div class="entry">
         <div class="stepper">
           <button data-rep="-1">−</button>
@@ -428,6 +672,12 @@ function vDay(){
       body = `<div class="note"><b>Ziel geknackt.</b> ${rec.reps[0]} > ${ex.goal} Wdh. in Satz 1 →
         nächstes Mal ${fmt(ex.top + ex.inc)} kg${ex.mode==='side' ? ' je Seite' : ''}.</div>`;
     }
+    if(!fixing && cur >= 1 && rec.reps[0] < ex.goal - 1 && !(ex.mode==='bw' && ex.top===0)){
+      const t = calibrate(ex, p[0].total, rec.reps[0]);
+      body = `<div class="note"><b>Satz 1 war zu schwer.</b> Der Guide will dich bei
+        Ziel bis Ziel−1 starten, also ${ex.goal-1} bis ${ex.goal} Wdh. Rechnerisch passen
+        ${fmt(fromTotal(ex, t, st.bw))} kg${ex.mode==='side' ? ' je Seite' : ''}.</div>` + body;
+    }
     if(!fixing && cur === 1 && rec.reps[0] >= ex.goal + 3 && !(ex.mode==='bw' && ex.top===0)){
       const t = calibrate(ex, p[0].total, rec.reps[0]);
       body = `<div class="note"><b>Satz 1 war zu leicht.</b> Bei ${rec.reps[0]} statt ${ex.goal} Wdh.
@@ -441,9 +691,25 @@ function vDay(){
       <button class="gear" data-edit="${ex.id}">⚙</button></div>
       <div class="pyr">${rows}</div>${clock}${body}</div>`;
   }).join('')
-  + (d.ex.some(e => e.top>0 || e.mode==='bw') ? `<div class="note" style="margin:16px 0">
-      <b>Aufwärmen:</b> 2–5 Sätze mit 40–67&nbsp;% des ersten Arbeitssatzes, je 3–6 Wdh.
-      Klar getrennt vom Arbeitssatz.<br><b>Jeder Satz ist AMRAP</b> — so viele saubere Wdh. wie möglich.</div>` : '')
+  + (() => {
+      const first = d.ex.find(e => e.top > 0);
+      if(!first) return '';
+      const t1 = toTotal(first, plan(first)[0].val, st.bw);
+      // 40 % der Gesamtlast kann unter dem Stangengewicht liegen, dann ist die
+      // leere Stange die Untergrenze
+      const u = first.mode === 'side' ? ' kg je Seite' : ' kg';
+      const show = f => {
+        const v = fromTotal(first, t1*f, st.bw);
+        return v <= 0 ? (first.mode === 'side' && first.bar > 0 ? 'leere Stange' : 'nur Körpergewicht')
+                      : fmt(v) + u;
+      };
+      return `<div class="note" style="margin:16px 0">
+        <b>Aufwärmen für ${esc(first.name)}:</b> 2–5 Sätze à 3–6 Wdh., von ${show(.40)}
+        bis ${show(.67)} als letztem Aufwärmsatz. Klar getrennt vom Arbeitssatz,
+        keine halbgaren Sätze dazwischen.<br>
+        <b>Jeder Satz ist AMRAP:</b> so viele saubere Wdh. wie möglich, abbrechen sobald
+        du an der nächsten zweifelst. Sätze 2 und 3 haben kein eigenes Ziel.</div>`;
+     })()
   + (done ? `<button class="btn primary" data-finish="1">Einheit abschließen</button>` : '');
 
 }
@@ -583,6 +849,7 @@ function findEx(id){
 function reapply(li, exId){
   const later = st.log.slice(li+1).some(s => s.ex.some(e => e.id===exId));
   if(later) return false;                                  // neuere Einheit hat Vorrang
+  if(st.log[li].deload) return false;                      // Deload zählt nicht
   const entry = st.log[li].ex.find(e => e.id===exId), ex = findEx(exId);
   if(!entry || !ex) return false;
   const r = entry.sets[0].reps;
@@ -631,7 +898,8 @@ function vHist(){
   el.innerHTML = head('Verlauf', '{"name":"home"}')
    + (st.log.length ? st.log.map((s,i) => ({s,i})).reverse().map(({s,i}) => `<div class="ex" style="padding:14px 16px" data-hist="${i}">
       <div class="eyebrow" style="margin-bottom:8px">${new Date(s.date).toLocaleDateString('de-DE',
-        {weekday:'short', day:'2-digit', month:'2-digit', year:'2-digit'})} · ${esc(s.dayName)}</div>
+        {weekday:'short', day:'2-digit', month:'2-digit', year:'2-digit'})} · ${esc(s.dayName)}${
+        s.deload ? ' · Deload' : ''}</div>
       <div class="log">${s.ex.map(e => `<b>${esc(e.name)}</b> ${e.sets.map(x =>
         (e.mode==='bw' ? (x.val>0 ? 'KG+'+fmt(x.val) : 'KG') : fmt(x.val)+'kg')+'×'+x.reps).join('  ')}${
         e.newTop > e.oldTop ? ` <span class="up">↑ ${fmt(e.newTop)}</span>` : ''}`).join('<br>')}</div>
@@ -643,12 +911,20 @@ function vHist(){
 /* ---------- Interaktion ---------- */
 document.addEventListener('click', e => {
   unlockAudio();
-  const t = e.target.closest('[data-go],[data-edit],[data-rep],[data-wt],[data-log],[data-finish],[data-savex],[data-savebw],[data-skip],[data-backup],[data-auto],[data-sound],[data-fix],[data-fixsave],[data-fixcancel],[data-hist],[data-hfix],[data-hsave],[data-hdel]');
+  // Abgelaufene Uhr räumt sich beim nächsten Tipp selbst weg
+  if(st.rest && Date.now() > st.rest.end && !e.target.closest('.clock')){
+    st.rest = null; save();
+  }
+  const t = e.target.closest('[data-go],[data-edit],[data-rep],[data-wt],[data-log],[data-finish],[data-savex],[data-savebw],[data-skip],[data-backup],[data-auto],[data-sound],[data-deload],[data-ex],[data-fix],[data-fixsave],[data-fixcancel],[data-hist],[data-hfix],[data-hsave],[data-hdel]');
   if(!t) return;
 
   if(t.dataset.go){ const g = JSON.parse(t.dataset.go); view.fix = null;
     view = g; return render(); }
   if(t.dataset.edit){ view = {name:'edit', id:t.dataset.edit, dayId:view.id}; return render(); }
+  if(t.dataset.deload){
+    st.sess.deload = !st.sess.deload; save(); view.keep = window.scrollY; return render();
+  }
+  if(t.dataset.ex){ view = {name:'prog', ex:t.dataset.ex}; return render(); }
   if(t.dataset.skip){ st.rest = null; save(); clearTimeout(beepTimer); return render(); }
 
   if(t.dataset.fix){
@@ -719,11 +995,14 @@ document.addEventListener('click', e => {
 
   if(t.dataset.finish){
     const d = st.days.find(x => x.id===view.id);
-    const entry = { date:new Date().toISOString(), dayId:d.id, dayName:d.name, ex:[] };
+    const entry = { date:new Date().toISOString(), dayId:d.id, dayName:d.name,
+      deload: !!st.sess.deload, ex:[] };
     d.ex.forEach((ex, i) => {
       const reps = st.sess.ex[i].reps; if(!reps.length) return;
       const p = plan(ex), oldTop = ex.top;
-      if(ex.mode === 'bw' && ex.top === 0){
+      if(st.sess.deload){
+        /* Deload-Tag zählt nicht für die Progression */
+      } else if(ex.mode === 'bw' && ex.top === 0){
         // Guide: ab 10 sauberen Wdh. mit Körpergewicht auf +5 kg umsteigen
         if(reps[0] >= 10) ex.top = 5;
       } else if(reps[0] > ex.goal){
