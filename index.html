@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="RPT">
 <meta name="theme-color" content="#0C0F11">
+<meta name="robots" content="noindex, nofollow">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>RPT</title>
@@ -158,6 +159,8 @@ const S = (() => { try { localStorage.setItem('_t','1'); localStorage.removeItem
   catch(e){ const m={}; return {getItem:k=>k in m?m[k]:null, setItem:(k,v)=>{m[k]=String(v)}}; } })();
 
 const DEFAULTS = {
+  // ACHTUNG: v nur hochzählen, wenn der gespeicherte Stand absichtlich
+  // verworfen werden soll. Sonst sind Verlauf und Gewichte weg.
   v: 2,
   bw: 80,                                  // Körpergewicht für Klimmzüge
   autoBackup: true,                        // nach jeder Einheit automatisch sichern
@@ -245,7 +248,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 function render(){
   clearInterval(timer); timer = null;
-  ({home:vHome, day:vDay, edit:vEdit, hist:vHist, set:vSettings}[view.name])();
+  ({home:vHome, day:vDay, edit:vEdit, hist:vHist, histedit:vHistEdit, set:vSettings}[view.name])();
   window.scrollTo(0, view.keep || 0); view.keep = 0;
 }
 const head = (title, back) => `<div class="top">
@@ -486,21 +489,76 @@ function vSettings(){
       </div>`;
 }
 
+/* Nachträgliche Korrektur einer abgeschlossenen Einheit.
+   Betrifft die Korrektur den jüngsten Eintrag einer Übung, wird die
+   Progression daraus neu berechnet und das Arbeitsgewicht angepasst. */
+function findEx(id){
+  for(const d of st.days){ const e = d.ex.find(x => x.id===id); if(e) return e; }
+  return null;
+}
+function reapply(li, exId){
+  const later = st.log.slice(li+1).some(s => s.ex.some(e => e.id===exId));
+  if(later) return false;                                  // neuere Einheit hat Vorrang
+  const entry = st.log[li].ex.find(e => e.id===exId), ex = findEx(exId);
+  if(!entry || !ex) return false;
+  const r = entry.sets[0].reps;
+  let nt = entry.oldTop;
+  if(ex.mode==='bw' && entry.oldTop===0){ if(r >= 10) nt = 5; }
+  else if(r > ex.goal) nt = round(entry.oldTop + ex.inc, ex.step);
+  const changed = nt !== entry.newTop;
+  entry.newTop = nt; ex.top = nt;
+  return changed;
+}
+
+function vHistEdit(){
+  const s0 = st.log[view.i];
+  if(!s0){ view = {name:'hist'}; return vHist(); }
+  const d = new Date(s0.date).toLocaleDateString('de-DE',
+    {weekday:'long', day:'2-digit', month:'2-digit', year:'2-digit'});
+
+  el.innerHTML = head(s0.dayName, '{"name":"hist"}')
+   + `<div class="eyebrow" style="margin:-10px 0 12px">${d}</div>`
+   + s0.ex.map(e => {
+      const fixing = view.fix && view.fix.id === e.id;
+      const rows = e.sets.map((x, k) => `<div class="set done${fixing && view.fix.n===k+1 ? ' fixing' : ''}"
+          data-hfix="${e.id}:${k+1}">
+          <div class="fill" style="width:100%"></div>
+          <div class="n">${k+1}</div>
+          <div class="w"><b>${e.mode==='bw' ? (x.val>0 ? 'KG + '+fmt(x.val)+' kg' : 'Körpergewicht')
+            : fmt(x.val)+' kg'}</b></div>
+          <div class="r"><em>${x.reps}</em> Wdh. <u>&#9998;</u></div></div>`).join('');
+      const entry = fixing ? `<div class="entry">
+          <div class="stepper">
+            <button data-rep="-1">−</button>
+            <div class="val" id="rv-${e.id}">${e.sets[view.fix.n-1].reps}<span>Wdh.</span></div>
+            <button data-rep="1">+</button>
+          </div>
+          <button class="btn primary" data-hsave="${e.id}">Satz ${view.fix.n} korrigieren</button>
+          <button class="btn ghost" data-fixcancel="1">Abbrechen</button></div>` : '';
+      return `<div class="ex"><div class="ex-head"><h2>${esc(e.name)}</h2></div>
+        <div class="pyr">${rows}</div>${entry}</div>`;
+     }).join('')
+   + `<div class="note" style="margin:16px 0">Korrigierst du Satz 1 der zuletzt absolvierten Einheit
+        einer Übung, passt die App das aktuelle Arbeitsgewicht mit an.</div>
+      <button class="btn ghost" data-hdel="${view.i}">Diese Einheit löschen</button>`;
+}
+
 function vHist(){
   el.innerHTML = head('Verlauf', '{"name":"home"}')
-   + (st.log.length ? [...st.log].reverse().map(s => `<div class="ex" style="padding:14px 16px">
+   + (st.log.length ? st.log.map((s,i) => ({s,i})).reverse().map(({s,i}) => `<div class="ex" style="padding:14px 16px" data-hist="${i}">
       <div class="eyebrow" style="margin-bottom:8px">${new Date(s.date).toLocaleDateString('de-DE',
         {weekday:'short', day:'2-digit', month:'2-digit', year:'2-digit'})} · ${esc(s.dayName)}</div>
       <div class="log">${s.ex.map(e => `<b>${esc(e.name)}</b> ${e.sets.map(x =>
         (e.mode==='bw' ? (x.val>0 ? 'KG+'+fmt(x.val) : 'KG') : fmt(x.val)+'kg')+'×'+x.reps).join('  ')}${
-        e.newTop > e.oldTop ? ` <span class="up">↑ ${fmt(e.newTop)}</span>` : ''}`).join('<br>')}</div></div>`).join('')
+        e.newTop > e.oldTop ? ` <span class="up">↑ ${fmt(e.newTop)}</span>` : ''}`).join('<br>')}</div>
+      <div style="font-size:11.5px;color:var(--mute);margin-top:9px">Antippen zum Korrigieren</div></div>`).join('')
     : `<div class="empty">Noch keine Einheit abgeschlossen.<br>Nach dem ersten Training steht hier,
        was du bewegt hast und wo es hochgeht.</div>`);
 }
 
 /* ---------- Interaktion ---------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-edit],[data-rep],[data-log],[data-finish],[data-savex],[data-savebw],[data-skip],[data-backup],[data-auto],[data-fix],[data-fixsave],[data-fixcancel]');
+  const t = e.target.closest('[data-go],[data-edit],[data-rep],[data-log],[data-finish],[data-savex],[data-savebw],[data-skip],[data-backup],[data-auto],[data-fix],[data-fixsave],[data-fixcancel],[data-hist],[data-hfix],[data-hsave],[data-hdel]');
   if(!t) return;
 
   if(t.dataset.go){ const g = JSON.parse(t.dataset.go); view.fix = null;
@@ -513,6 +571,23 @@ document.addEventListener('click', e => {
     view.fix = {id, n: Number(n)}; view.keep = window.scrollY; return render();
   }
   if(t.dataset.fixcancel){ view.fix = null; view.keep = window.scrollY; return render(); }
+
+  if(t.dataset.hist){ view = {name:'histedit', i: Number(t.dataset.hist)}; return render(); }
+  if(t.dataset.hfix){
+    const [id, n] = t.dataset.hfix.split(':');
+    view.fix = {id, n: Number(n)}; view.keep = window.scrollY; return render();
+  }
+  if(t.dataset.hsave){
+    const id = t.dataset.hsave, e = st.log[view.i].ex.find(x => x.id===id);
+    e.sets[view.fix.n-1].reps = parseInt(document.getElementById('rv-'+id).firstChild.textContent) || 0;
+    if(view.fix.n === 1) reapply(view.i, id);
+    save(); view.fix = null; view.keep = window.scrollY; return render();
+  }
+  if(t.dataset.hdel){
+    if(!confirm('Diese Einheit endgültig aus dem Verlauf entfernen?')) return;
+    st.log.splice(Number(t.dataset.hdel), 1); save();
+    view = {name:'hist'}; return render();
+  }
   if(t.dataset.fixsave){
     const rec = view.sess.ex.find(x => x.id === t.dataset.fixsave);
     rec.reps[view.fix.n-1] = parseInt(document.getElementById('rv-'+t.dataset.fixsave).firstChild.textContent) || 0;
