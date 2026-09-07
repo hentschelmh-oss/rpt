@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RPT">
+<meta name="theme-color" content="#0C0F11">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>RPT</title>
+<style>
+:root{
+  --bg:#0C0F11; --panel:#151A1E; --panel2:#1C2328; --line:#2A343B;
+  --fg:#EAF0F3; --mute:#7E8E99; --amber:#F0A23C; --green:#5CBF92; --red:#E0664F;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--sans)}
+body{
+  padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 32px);
+  max-width:560px;margin:0 auto;overscroll-behavior-y:contain;
+}
+button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+input,select{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);
+  border-radius:8px;padding:9px 10px;width:100%}
+input[type=number]{font-family:var(--mono)}
+
+/* ---- Kopfzeile ---- */
+.top{display:flex;align-items:baseline;gap:12px;margin-bottom:22px;min-height:30px}
+.top h1{font-size:19px;font-weight:650;letter-spacing:-.01em;margin:0;flex:1}
+.back{color:var(--mute);font-size:15px;font-weight:500}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
+
+/* ---- Karten ---- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:15px 16px;margin-bottom:10px;display:block;width:100%;text-align:left}
+.card h2{margin:0 0 3px;font-size:17px;font-weight:600}
+.card p{margin:0;font-size:13px;color:var(--mute);line-height:1.45}
+
+/* ---- Übungsblock ---- */
+.ex{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.ex-head{display:flex;align-items:center;gap:10px;padding:14px 16px 12px}
+.ex-head h2{margin:0;font-size:16px;font-weight:600;flex:1}
+.tag{font-family:var(--mono);font-size:11px;color:var(--mute);border:1px solid var(--line);
+  border-radius:999px;padding:2px 8px;white-space:nowrap}
+.gear{color:var(--mute);font-size:17px;padding:2px 4px}
+
+/* ---- Die umgekehrte Pyramide: Balkenbreite = Last ---- */
+.pyr{padding:0 16px 6px}
+.set{position:relative;margin-bottom:7px;border-radius:9px;overflow:hidden;
+  border:1px solid var(--line);background:var(--panel2);display:flex;align-items:center;
+  min-height:52px;padding:8px 12px;gap:10px;transition:border-color .15s}
+.set.active{border-color:var(--amber)}
+.set.done{border-color:rgba(92,191,146,.45)}
+.set .fill{position:absolute;inset:0;background:rgba(240,162,60,.10);z-index:0}
+.set.done .fill{background:rgba(92,191,146,.10)}
+.set > *{position:relative;z-index:1}
+.set .n{font-family:var(--mono);font-size:11px;color:var(--mute);width:16px;flex:none}
+.set .w{flex:1;min-width:0}
+.set .w b{font-family:var(--mono);font-size:19px;font-weight:600;letter-spacing:-.02em;display:block;line-height:1.15}
+.set .w small{font-size:11px;color:var(--mute);font-family:var(--mono);display:block;margin-top:2px}
+.set .r{font-family:var(--mono);font-size:13px;color:var(--mute);flex:none;text-align:right}
+.set .r em{font-style:normal;font-size:20px;color:var(--fg);font-weight:600}
+.set.done .r em{color:var(--green)}
+
+/* ---- Eingabe ---- */
+.entry{padding:2px 16px 16px}
+.stepper{display:flex;align-items:center;gap:14px;justify-content:center;margin:6px 0 12px}
+.stepper button{width:52px;height:52px;border-radius:14px;background:var(--panel2);
+  border:1px solid var(--line);font-size:24px;font-weight:400;line-height:1}
+.stepper .val{font-family:var(--mono);font-size:38px;font-weight:600;min-width:74px;text-align:center;
+  letter-spacing:-.03em}
+.stepper .val span{font-size:13px;color:var(--mute);display:block;font-weight:400;letter-spacing:.1em;
+  text-transform:uppercase;margin-top:-2px}
+.btn{display:block;width:100%;text-align:center;padding:14px;border-radius:12px;font-weight:600;font-size:15px}
+.btn.primary{background:var(--amber);color:#17120A}
+.btn.ghost{border:1px solid var(--line);color:var(--mute);font-weight:500}
+.btn+.btn{margin-top:8px}
+
+/* ---- Pausen-Uhr ---- */
+.rest{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;margin:0 16px 14px}
+.rest .t{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em}
+.rest .lbl{font-size:12px;color:var(--mute);flex:1;line-height:1.35}
+.rest.ready .t{color:var(--green)}
+
+/* ---- Hinweise ---- */
+.note{font-size:12.5px;line-height:1.5;color:var(--mute);background:var(--panel2);
+  border-left:2px solid var(--amber);border-radius:0 8px 8px 0;padding:10px 12px;margin:0 16px 14px}
+.note b{color:var(--fg);font-weight:600}
+.empty{text-align:center;color:var(--mute);font-size:14px;padding:34px 10px;line-height:1.55}
+
+/* ---- Formular ---- */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hr{height:1px;background:var(--line);margin:20px 0}
+.log{font-family:var(--mono);font-size:12.5px;color:var(--mute);line-height:1.7}
+.log b{color:var(--fg);font-weight:600}
+.up{color:var(--green)}
+
+/* ---- Habit Tracker: 16 Wochen, eine Spalte je Woche ---- */
+.habit{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.stats{display:flex;gap:20px;margin-bottom:16px}
+.stat b{font-family:var(--mono);font-size:27px;font-weight:600;display:block;letter-spacing:-.03em;line-height:1.05}
+.stat b i{font-style:normal;font-size:15px;color:var(--mute);font-weight:400}
+.stat span{font-size:10px;color:var(--mute);letter-spacing:.1em;text-transform:uppercase;display:block;margin-top:3px}
+.cal{display:flex;gap:3px;align-items:stretch}
+.cal .dow{display:flex;flex-direction:column;gap:3px;width:15px;flex:none}
+.cal .dow em{flex:1;font-style:normal;font-size:8.5px;color:var(--mute);display:flex;align-items:center}
+.cal .col{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.cal i{aspect-ratio:1;border-radius:2.5px;background:var(--panel2);border:1px solid transparent;display:block}
+.cal i.on{background:var(--amber);border-color:var(--amber)}
+.cal i.now{border-color:var(--mute)}
+.cal i.fut{opacity:.3}
+.calfoot{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mute);margin-top:8px;
+  letter-spacing:.04em}
+
+/* ---- Schalter ---- */
+.toggle{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.toggle span{flex:1}
+.toggle b{display:block;font-size:14px;font-weight:600}
+.toggle small{display:block;font-size:12px;color:var(--mute);margin-top:2px}
+.sw{flex:none;width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;
+  transition:background .18s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:var(--fg);transition:transform .18s}
+.sw.on{background:var(--amber)}
+.sw.on::after{transform:translateX(18px);background:#17120A}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ============================================================
+   RPT — Reverse Pyramid Training
+   Logik nach leangains.com/reverse-pyramid-training-guide
+   - Abhängiges System: alle Sätze leiten sich von Satz 1 ab
+   - Breakdown: Satz n = Satz1 × (1 − bd × (n−1))
+   - Doppelte Progression: Wdh. in Satz 1 > Ziel → nächstes Mal mehr
+   - Jeder Satz ist AMRAP
+   ============================================================ */
+
+const S = (() => { try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return localStorage; }
+  catch(e){ const m={}; return {getItem:k=>k in m?m[k]:null, setItem:(k,v)=>{m[k]=String(v)}}; } })();
+
+const DEFAULTS = {
+  v: 2,
+  bw: 80,                                  // Körpergewicht für Klimmzüge
+  autoBackup: true,                        // nach jeder Einheit automatisch sichern
+  plates: [20,15,10,5,2.5,1.25],           // verfügbare Scheiben je Seite
+  days: [
+    { id:'d1', name:'Tag 1', sub:'Deadlift · Overhead Press · Bizeps', ex:[
+      {id:'dl',  name:'Deadlift',       goal:6,  sets:2, bd:.10, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:240},
+      {id:'ohp', name:'Overhead Press', goal:8,  sets:3, bd:.05, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:180},
+      {id:'bi1', name:'Bizeps',         goal:10, sets:2, bd:.10, mode:'side', bar:0,  top:0,     step:1.25, inc:1.25, rest:90},
+    ]},
+    { id:'d2', name:'Tag 2', sub:'Bankdrücken · Seal Row · Trizeps', ex:[
+      {id:'bp',  name:'Bankdrücken',    goal:8,  sets:3, bd:.05, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:180},
+      {id:'sr',  name:'Seal Row',       goal:8,  sets:3, bd:.05, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:180},
+      {id:'tri', name:'Trizeps',        goal:10, sets:2, bd:.10, mode:'total',bar:0,  top:0,     step:1,    inc:1,    rest:90},
+    ]},
+    { id:'d3', name:'Tag 3', sub:'Squat · Klimmzüge · Bizeps', ex:[
+      {id:'sq',  name:'Squat',          goal:10, sets:3, bd:.10, mode:'side', bar:20, top:0,     step:1.25, inc:1.25, rest:240},
+      {id:'cu',  name:'Klimmzüge',      goal:8,  sets:3, bd:.10, mode:'bw',   bar:0,  top:0,     step:1.25, inc:1.25, rest:180},
+      {id:'bi2', name:'Bizeps',         goal:10, sets:2, bd:.10, mode:'side', bar:0,  top:0,     step:1.25, inc:1.25, rest:90},
+    ]},
+  ],
+  log: []   // { date, dayId, ex:[{id,name,sets:[{val,total,reps}],oldTop,newTop}] }
+};
+
+let st = load(), view = {name:'home'}, timer = null;
+
+function load(){
+  try { const r = S.getItem('rpt.state'); if(r){ const p = JSON.parse(r); if(p && p.v===2) return p; } }
+  catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+function save(){ try{ S.setItem('rpt.state', JSON.stringify(st)); }catch(e){} }
+
+/* ---------- Rechnen ---------- */
+const round = (x, step) => Math.round(x/step)*step;
+const fmt = n => (Math.round(n*100)/100).toString().replace('.', ',');
+
+// Gesamtlast, die tatsächlich am Körper hängt
+function toTotal(ex, val, bw){
+  if(ex.mode==='side') return ex.bar + 2*val;
+  if(ex.mode==='bw')   return bw + val;
+  return val;
+}
+// zurück auf den Wert, den man einstellt/auflegt
+function fromTotal(ex, total, bw){
+  if(ex.mode==='side') return Math.max(0, round((total - ex.bar)/2, ex.step));
+  if(ex.mode==='bw')   return Math.max(0, round(total - bw, ex.step));
+  return Math.max(0, round(total, ex.step));
+}
+
+// Die Pyramide: Satz 1 ist der Anker, alle anderen hängen daran
+function plan(ex){
+  const t1 = toTotal(ex, ex.top, st.bw), out = [];
+  for(let n=1; n<=ex.sets; n++){
+    const val = n===1 ? ex.top : fromTotal(ex, t1*(1 - ex.bd*(n-1)), st.bw);
+    out.push({ n, val, total: toTotal(ex, val, st.bw), ratio: t1>0 ? toTotal(ex,val,st.bw)/t1 : 1 });
+  }
+  return out;
+}
+
+function label(ex, val){
+  if(ex.mode==='side') return fmt(val)+' kg <span style="font-size:.62em;color:var(--mute)">/ Seite</span>';
+  if(ex.mode==='bw')   return val>0 ? 'KG + '+fmt(val)+' kg' : 'nur Körpergewicht';
+  return fmt(val)+' kg';
+}
+function sub(ex, val, total){
+  if(ex.mode==='side') return plates(val) + (ex.bar>0 ? ' · '+fmt(total)+' kg gesamt' : '');
+  if(ex.mode==='bw')   return fmt(total)+' kg Systemlast';
+  return '';
+}
+function plates(perSide){
+  let r = perSide, parts = [];
+  for(const p of st.plates){ const c = Math.floor((r+1e-9)/p); if(c>0){ parts.push(c+'×'+fmt(p)); r -= c*p; } }
+  return parts.length ? parts.join(' + ') : '—';
+}
+// Epley: Gewicht, mit dem das Ziel voraussichtlich exakt erreicht wird
+function calibrate(ex, total, reps){
+  const oneRM = total * (1 + reps/30);
+  return oneRM / (1 + ex.goal/30);
+}
+
+/* ---------- Ansichten ---------- */
+const el = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function render(){
+  clearInterval(timer); timer = null;
+  ({home:vHome, day:vDay, edit:vEdit, hist:vHist, set:vSettings}[view.name])();
+  window.scrollTo(0, view.keep || 0); view.keep = 0;
+}
+const head = (title, back) => `<div class="top">
+  ${back ? `<button class="back" data-go='${esc(back)}'>‹ Zurück</button>` : ''}
+  <h1>${esc(title)}</h1></div>`;
+
+/* ---- Habit Tracker ----
+   Serie wird in Wochen gezählt, nicht in Tagen: bei 3 Einheiten pro Woche
+   ist eine Tagesserie das falsche Maß. Eine Woche zählt ab 3 Einheiten. */
+function weekStart(d){ const x = new Date(d); x.setHours(0,0,0,0);
+  x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x; }
+
+function habit(){
+  const WEEKS = 16, target = st.days.length;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const trained = new Map();
+  st.log.forEach(s => { const k = new Date(s.date).toDateString();
+    trained.set(k, (trained.get(k)||'') + ' ' + s.dayName); });
+  const inWeek = t => st.log.filter(s => weekStart(s.date).getTime() === t).length;
+
+  const cur = weekStart(today);
+  let streak = inWeek(cur.getTime()) >= target ? 1 : 0;          // laufende Woche zählt erst, wenn voll
+  for(const w = new Date(cur);;){ w.setDate(w.getDate()-7);
+    if(inWeek(w.getTime()) >= target) streak++; else break; }
+
+  const first = new Date(cur); first.setDate(first.getDate() - 7*(WEEKS-1));
+  let cols = '';
+  for(let i=0;i<WEEKS;i++){
+    let cells = '';
+    for(let j=0;j<7;j++){
+      const d = new Date(first); d.setDate(first.getDate() + i*7 + j);
+      const on = trained.has(d.toDateString());
+      cells += `<i class="${on?'on':''}${d.getTime()===today.getTime()?' now':''}${d>today?' fut':''}"
+        title="${d.toLocaleDateString('de-DE')}${on?' ·'+trained.get(d.toDateString()):''}"></i>`;
+    }
+    cols += `<div class="col">${cells}</div>`;
+  }
+
+  const last = st.log.length ? st.log[st.log.length-1] : null;
+  const since = last ? Math.floor((today - new Date(new Date(last.date).toDateString()))/864e5) : null;
+  const gap = last ? (since===0 ? 'heute trainiert' : since===1 ? 'gestern trainiert'
+      : `letzte Einheit vor ${since} Tagen`) : 'noch keine Einheit';
+
+  return `<div class="habit">
+    <div class="stats">
+      <div class="stat"><b>${streak}</b><span>Wochen&nbsp;Serie</span></div>
+      <div class="stat"><b>${inWeek(cur.getTime())}<i>/${target}</i></b><span>diese Woche</span></div>
+      <div class="stat"><b>${st.log.length}</b><span>gesamt</span></div>
+    </div>
+    <div class="cal">
+      <div class="dow"><em>Mo</em><em></em><em>Mi</em><em></em><em>Fr</em><em></em><em>So</em></div>
+      ${cols}
+    </div>
+    <div class="calfoot"><span>${first.toLocaleDateString('de-DE',{month:'short',year:'2-digit'})}</span>
+      <span>${gap}</span></div></div>`;
+}
+
+function vHome(){
+  const last = d => {
+    const e = [...st.log].reverse().find(x => x.dayId===d.id);
+    if(!e) return 'noch nicht trainiert';
+    const days = Math.floor((Date.now() - new Date(e.date)) / 864e5);
+    return days===0 ? 'heute' : days===1 ? 'gestern' : 'vor '+days+' Tagen';
+  };
+  el.innerHTML = `<div class="top"><h1>Reverse&nbsp;Pyramid</h1>
+      <button class="back" data-go='{"name":"set"}'>Einstellungen</button></div>
+    ${habit()}
+    ${st.log.length >= 4 && (!st.lastBackup || Date.now()-st.lastBackup > 28*864e5)
+      ? `<div class="note" style="margin:0 0 14px"><b>Zeit für eine Sicherung.</b>
+          ${st.log.length} Einheiten liegen nur auf diesem iPhone.
+          <button data-go='{"name":"set"}' style="color:var(--amber);text-decoration:underline">
+          In den Einstellungen sichern</button></div>` : ''}
+    <div class="eyebrow" style="margin-bottom:10px">Training wählen</div>
+    ${st.days.map(d => `<button class="card" data-go='{"name":"day","id":"${d.id}"}'>
+      <h2>${esc(d.name)}</h2><p>${esc(d.sub)}<br>${last(d)}</p></button>`).join('')}
+    <div class="hr"></div>
+    <button class="card" data-go='{"name":"hist"}'><h2>Verlauf</h2>
+      <p>${st.log.length} abgeschlossene Einheiten</p></button>`;
+}
+
+function vDay(){
+  const d = st.days.find(x => x.id===view.id);
+  if(!view.sess || view.sess.dayId !== d.id)
+    view.sess = { dayId:d.id, ex:d.ex.map(e => ({id:e.id, reps:[]})) };
+  const s = view.sess;
+  const ready = e => e.top > 0 || e.mode === 'bw';          // ohne Gewicht nicht trainierbar
+  const done = d.ex.every((e,i) => !ready(e) || s.ex[i].reps.length === e.sets)
+            && s.ex.some(e => e.reps.length);
+
+  el.innerHTML = head(d.name, '{"name":"home"}') + d.ex.map((ex, i) => {
+    const p = plan(ex), rec = s.ex[i];
+    if(ex.top === 0 && ex.mode !== 'bw')
+      return `<div class="ex"><div class="ex-head"><h2>${esc(ex.name)}</h2>
+        <button class="gear" data-edit="${ex.id}">⚙</button></div>
+        <div class="empty" style="padding:16px">Arbeitsgewicht für Satz 1 fehlt.<br>
+          <button class="btn ghost" style="margin-top:10px" data-edit="${ex.id}">Gewicht eintragen</button></div></div>`;
+
+    const min = Math.min(...p.map(x => x.ratio));
+    const cur = rec.reps.length;                      // Index des nächsten Satzes
+    const rows = p.map(x => {
+      const w = min < 1 ? 62 + 38*(x.ratio-min)/(1-min) : 100;
+      const state = x.n <= cur ? 'done' : x.n === cur+1 ? 'active' : '';
+      return `<div class="set ${state}">
+        <div class="fill" style="width:${w}%"></div>
+        <div class="n">${x.n}</div>
+        <div class="w"><b>${label(ex, x.val)}</b><small>${sub(ex, x.val, x.total)}</small></div>
+        <div class="r">${x.n <= cur ? '<em>'+rec.reps[x.n-1]+'</em> Wdh.'
+          : 'Ziel '+(x.n===1 ? ex.goal : '≥'+ex.goal)}</div></div>`;
+    }).join('');
+
+    let body = '';
+    if(cur < ex.sets){
+      const guess = ex.goal + (cur>0 ? 1 : 0);
+      body = `<div class="entry">
+        <div class="stepper">
+          <button data-rep="-1">−</button>
+          <div class="val" id="rv-${ex.id}">${guess}<span>Wdh.</span></div>
+          <button data-rep="1">+</button>
+        </div>
+        <button class="btn primary" data-log="${ex.id}">Satz ${cur+1} speichern</button></div>`;
+    } else if(ex.mode === 'bw' && ex.top === 0){
+      const r = rec.reps[0];
+      body = r >= 10
+        ? `<div class="note"><b>Bereit für Zusatzgewicht.</b> ${r} Wdh. mit Körpergewicht →
+            nächstes Mal Gürtel mit 5 kg. Ab dann greift der 10-%-Breakdown.</div>`
+        : r < 6
+        ? `<div class="note"><b>Noch unter 6 Wdh.</b> Der Guide empfiehlt bis dahin Latzug oder
+            Klimmzüge mit Band statt freier Wiederholungen.</div>`
+        : `<div class="note"><b>Weiter mit Körpergewicht.</b> Ab 10 sauberen Wdh. im ersten Satz
+            steigst du auf +5 kg um. Noch ${10 - r} zu gehen.</div>`;
+    } else if(rec.reps[0] > ex.goal){
+      body = `<div class="note"><b>Ziel geknackt.</b> ${rec.reps[0]} > ${ex.goal} Wdh. in Satz 1 →
+        nächstes Mal ${fmt(ex.top + ex.inc)} kg${ex.mode==='side' ? ' je Seite' : ''}.</div>`;
+    }
+    if(cur === 1 && rec.reps[0] >= ex.goal + 3 && !(ex.mode==='bw' && ex.top===0)){
+      const t = calibrate(ex, p[0].total, rec.reps[0]);
+      body = `<div class="note"><b>Satz 1 war zu leicht.</b> Bei ${rec.reps[0]} statt ${ex.goal} Wdh.
+        wären rechnerisch ${fmt(fromTotal(ex, t, st.bw))} kg${ex.mode==='side' ? ' je Seite' : ''} passend.
+        Der Guide will dich bei Ziel bis Ziel−1 starten.</div>` + body;
+    }
+    const restLeft = view.rest && view.rest.id === ex.id ? view.rest : null;
+    const clock = restLeft ? `<div class="rest ${restLeft.left<=0?'ready':''}" id="clock">
+        <div class="t">${mmss(restLeft.left)}</div>
+        <div class="lbl">${restLeft.left>0 ? 'Pause bis zum nächsten Satz' : 'Bereit — nächster Satz'}</div>
+        <button class="back" data-skip="1">Überspringen</button></div>` : '';
+
+    return `<div class="ex"><div class="ex-head"><h2>${esc(ex.name)}</h2>
+      <div class="tag">${ex.sets}×${ex.goal}${ex.mode==='bw' && ex.top===0 ? ' · Körpergewicht' : ' · −'+fmt(ex.bd*100)+'%'}</div>
+      <button class="gear" data-edit="${ex.id}">⚙</button></div>
+      <div class="pyr">${rows}</div>${clock}${body}</div>`;
+  }).join('')
+  + (d.ex.some(e => e.top>0 || e.mode==='bw') ? `<div class="note" style="margin:16px 0">
+      <b>Aufwärmen:</b> 2–5 Sätze mit 40–67&nbsp;% des ersten Arbeitssatzes, je 3–6 Wdh.
+      Klar getrennt vom Arbeitssatz.<br><b>Jeder Satz ist AMRAP</b> — so viele saubere Wdh. wie möglich.</div>` : '')
+  + (done ? `<button class="btn primary" data-finish="1">Einheit abschließen</button>` : '');
+
+  if(view.rest) tick();
+}
+
+function mmss(s){ s = Math.max(0, Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+function tick(){
+  timer = setInterval(() => {
+    if(!view.rest) return clearInterval(timer);
+    view.rest.left = Math.round((view.rest.end - Date.now())/1000);
+    const c = document.getElementById('clock'); if(!c) return clearInterval(timer);
+    c.querySelector('.t').textContent = mmss(view.rest.left);
+    if(view.rest.left <= 0){ c.classList.add('ready'); c.querySelector('.lbl').textContent = 'Bereit — nächster Satz'; clearInterval(timer); }
+  }, 500);
+}
+
+function vEdit(){
+  const d = st.days.find(x => x.id===view.dayId), ex = d.ex.find(e => e.id===view.id);
+  const opt = (v,l,cur) => `<option value="${v}"${v===cur?' selected':''}>${l}</option>`;
+  el.innerHTML = head(ex.name, JSON.stringify({name:'day', id:d.id}))
+   + `<div class="ex" style="padding:16px">
+      <div class="field"><label>Arbeitsgewicht Satz 1 ${ex.mode==='side'?'(je Seite)':ex.mode==='bw'?'(Zusatzgewicht)':''}</label>
+        <input type="number" inputmode="decimal" step="any" id="f-top" value="${ex.top}"></div>
+      <div class="grid2">
+        <div class="field"><label>Ziel-Wdh.</label><input type="number" id="f-goal" value="${ex.goal}"></div>
+        <div class="field"><label>Sätze</label><input type="number" id="f-sets" value="${ex.sets}"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Breakdown je Satz</label><select id="f-bd">
+          ${opt(.05,'5 % — Bank, Press, Seal Row',ex.bd)}${opt(.10,'10 % — Kreuzheben, Squat, Rudern, Klimmzug, Isolation',ex.bd)}
+          ${opt(.075,'7,5 % — eigene Anpassung',ex.bd)}</select></div>
+        <div class="field"><label>Ladeart</label><select id="f-mode">
+          ${opt('side','je Seite',ex.mode)}${opt('total','Gesamtgewicht',ex.mode)}${opt('bw','Körpergewicht + Zusatz',ex.mode)}</select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Stange / Gestell (kg)</label><input type="number" inputmode="decimal" step="any" id="f-bar" value="${ex.bar}"></div>
+        <div class="field"><label>Kleinster Schritt (kg)</label><input type="number" inputmode="decimal" step="any" id="f-step" value="${ex.step}"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Steigerung bei Zielerreichung</label><input type="number" inputmode="decimal" step="any" id="f-inc" value="${ex.inc}"></div>
+        <div class="field"><label>Satzpause (Sek.)</label><input type="number" id="f-rest" value="${ex.rest}"></div>
+      </div>
+      <button class="btn primary" data-savex="1">Speichern</button></div>`;
+}
+
+function vSettings(){
+  el.innerHTML = head('Einstellungen', '{"name":"home"}')
+   + `<div class="ex" style="padding:16px">
+      <div class="field"><label>Körpergewicht (kg) — Basis für Klimmzüge</label>
+        <input type="number" inputmode="decimal" step="any" id="f-bw" value="${st.bw}"></div>
+      <div class="field"><label>Verfügbare Scheiben je Seite (kg, mit Komma getrennt)</label>
+        <input id="f-pl" value="${st.plates.map(fmt).join(', ')}"></div>
+      <button class="btn primary" data-savebw="1">Speichern</button></div>
+      <div class="hr"></div>
+      <div class="eyebrow" style="margin-bottom:8px">Sicherung</div>
+      <div class="ex" style="padding:16px">
+        <p style="margin:0 0 14px;font-size:13px;color:var(--mute);line-height:1.5">
+          Alles liegt nur auf diesem Gerät. Sichere die Datei ab und zu in Dateien oder
+          iCloud Drive — sonst ist der Verlauf weg, wenn das Symbol vom Home-Bildschirm
+          fliegt oder iOS den Speicher aufräumt.${st.lastBackup ?
+            ' Letzte Sicherung: '+new Date(st.lastBackup).toLocaleDateString('de-DE')+'.' : ''}</p>
+        <button class="toggle" data-auto="1">
+          <span><b>Nach jedem Training sichern</b><small>legt die Datei automatisch ab</small></span>
+          <i class="sw ${st.autoBackup !== false ? 'on' : ''}"></i></button>
+        <p style="margin:12px 0 14px;font-size:12.5px;color:var(--mute);line-height:1.5">
+          Wohin gesichert wird, bestimmt iOS: Einstellungen &gt; Apps &gt; Safari &gt; Downloads.
+          Ab Werk steht das auf iCloud Drive, Ordner „Downloads". Über „Andere" lässt sich
+          ein eigener Ordner wählen.</p>
+        <button class="btn primary" data-backup="1">Jetzt sichern</button>
+        <label class="btn ghost" style="cursor:pointer">Backup einlesen
+          <input type="file" accept="application/json,.json" id="f-imp" style="display:none"></label>
+      </div>`;
+}
+
+function vHist(){
+  el.innerHTML = head('Verlauf', '{"name":"home"}')
+   + (st.log.length ? [...st.log].reverse().map(s => `<div class="ex" style="padding:14px 16px">
+      <div class="eyebrow" style="margin-bottom:8px">${new Date(s.date).toLocaleDateString('de-DE',
+        {weekday:'short', day:'2-digit', month:'2-digit', year:'2-digit'})} · ${esc(s.dayName)}</div>
+      <div class="log">${s.ex.map(e => `<b>${esc(e.name)}</b> ${e.sets.map(x =>
+        (e.mode==='bw' ? (x.val>0 ? 'KG+'+fmt(x.val) : 'KG') : fmt(x.val)+'kg')+'×'+x.reps).join('  ')}${
+        e.newTop > e.oldTop ? ` <span class="up">↑ ${fmt(e.newTop)}</span>` : ''}`).join('<br>')}</div></div>`).join('')
+    : `<div class="empty">Noch keine Einheit abgeschlossen.<br>Nach dem ersten Training steht hier,
+       was du bewegt hast und wo es hochgeht.</div>`);
+}
+
+/* ---------- Interaktion ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-go],[data-edit],[data-rep],[data-log],[data-finish],[data-savex],[data-savebw],[data-skip],[data-backup],[data-auto]');
+  if(!t) return;
+
+  if(t.dataset.go){ const g = JSON.parse(t.dataset.go); if(g.name!=='day') view.sess=null, view.rest=null; view = Object.assign(g, {sess:view.sess, rest:view.rest}); return render(); }
+  if(t.dataset.edit){ view = {name:'edit', id:t.dataset.edit, dayId:view.id, sess:view.sess, rest:view.rest}; return render(); }
+  if(t.dataset.skip){ view.rest = null; return render(); }
+
+  if(t.dataset.rep){
+    const box = t.parentElement.querySelector('.val');
+    const v = Math.max(0, parseInt(box.firstChild.textContent) + parseInt(t.dataset.rep));
+    box.firstChild.textContent = v; return;
+  }
+
+  if(t.dataset.log){
+    const d = st.days.find(x => x.id===view.id), ex = d.ex.find(x => x.id===t.dataset.log);
+    const reps = parseInt(document.getElementById('rv-'+ex.id).firstChild.textContent) || 0;
+    view.sess.ex.find(x => x.id===ex.id).reps.push(reps);
+    view.rest = { id:ex.id, end:Date.now() + ex.rest*1000, left:ex.rest };
+    view.keep = window.scrollY;
+    return render();
+  }
+
+  if(t.dataset.finish){
+    const d = st.days.find(x => x.id===view.id);
+    const entry = { date:new Date().toISOString(), dayId:d.id, dayName:d.name, ex:[] };
+    d.ex.forEach((ex, i) => {
+      const reps = view.sess.ex[i].reps; if(!reps.length) return;
+      const p = plan(ex), oldTop = ex.top;
+      if(ex.mode === 'bw' && ex.top === 0){
+        // Guide: ab 10 sauberen Wdh. mit Körpergewicht auf +5 kg umsteigen
+        if(reps[0] >= 10) ex.top = 5;
+      } else if(reps[0] > ex.goal){
+        ex.top = round(ex.top + ex.inc, ex.step);                       // doppelte Progression
+      }
+      entry.ex.push({ id:ex.id, name:ex.name, oldTop, newTop:ex.top, mode:ex.mode,
+        sets: reps.map((r, n) => ({ val:p[n].val, total:p[n].total, reps:r })) });
+    });
+    st.log.push(entry); save();
+    if(st.autoBackup !== false) backup();     // direkt im Klick, sonst blockt iOS den Download
+    view = {name:'home'}; return render();
+  }
+
+  if(t.dataset.savex){
+    const d = st.days.find(x => x.id===view.dayId), ex = d.ex.find(x => x.id===view.id);
+    const num = id => parseFloat(String(document.getElementById(id).value).replace(',','.')) || 0;
+    ex.top = num('f-top'); ex.goal = Math.max(1, num('f-goal')); ex.sets = Math.min(5, Math.max(1, num('f-sets')));
+    ex.bd = parseFloat(document.getElementById('f-bd').value); ex.mode = document.getElementById('f-mode').value;
+    ex.bar = num('f-bar'); ex.step = num('f-step') || 1.25; ex.inc = num('f-inc') || ex.step; ex.rest = num('f-rest') || 180;
+    save(); view = {name:'day', id:d.id, sess:view.sess, rest:view.rest}; return render();
+  }
+
+  if(t.dataset.savebw){
+    st.bw = parseFloat(String(document.getElementById('f-bw').value).replace(',','.')) || st.bw;
+    st.plates = document.getElementById('f-pl').value.split(',').map(x => parseFloat(x.replace(',','.')))
+      .filter(x => x > 0).sort((a,b) => b-a);
+    save(); view = {name:'home'}; return render();
+  }
+
+  if(t.dataset.backup){ backup(); setTimeout(render, 300); }
+  if(t.dataset.auto){ st.autoBackup = !(st.autoBackup !== false); save(); return render(); }
+});
+
+/* Sicherung anstossen. iOS legt die Datei dort ab, was unter
+   Einstellungen > Apps > Safari > Downloads eingestellt ist, ab Werk
+   der Ordner "Downloads" in iCloud Drive. Eine Web-App kann nicht selbst
+   in die iCloud schreiben; das ist der naechstbeste Weg. */
+function backup(){
+  const d = new Date(), p = n => String(n).padStart(2,'0');
+  const name = `rpt-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.json`;
+  try {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(st)], {type:'application/json'}));
+    a.download = name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    st.lastBackup = Date.now(); save(); return true;
+  } catch(e){ return false; }
+}
+
+// Backup einlesen — ersetzt den kompletten Stand
+document.addEventListener('change', e => {
+  if(e.target.id !== 'f-imp') return;
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    let p; try { p = JSON.parse(r.result); } catch(err){ p = null; }
+    if(!p || !Array.isArray(p.days) || !Array.isArray(p.log))
+      return alert('Diese Datei ist kein Backup aus dieser App.');
+    st = p; save(); view = {name:'home'}; render();
+  };
+  r.onerror = () => alert('Die Datei ließ sich nicht lesen.');
+  r.readAsText(f);
+});
+
+// Bittet iOS, den Speicher dauerhaft zu behalten statt ihn bei Bedarf zu räumen
+if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+render();
+</script>
+</body>
+</html>
