@@ -173,6 +173,18 @@ input[type=number]{font-family:var(--mono)}
 .card .rows b{font-family:var(--mono);font-size:12.5px;font-weight:500;flex:none}
 .card .rows b i{font-style:normal;color:var(--mute);font-size:10.5px;font-weight:400}
 .card .rows b.none{color:var(--dim);font-weight:400;font-size:11.5px}
+
+.card.extra .rows em{font-size:12px;line-height:1.45}
+.card.extra.on{border-color:var(--fg)}
+.card.extra.on .hd span{color:var(--fg)}
+.cal i.xt{background:var(--dim)}
+.calfoot i.k{display:inline-block;width:8px;height:8px;border-radius:1px;margin:0 5px 0 0;
+  vertical-align:middle}
+.calfoot i.k.on{background:var(--fg)}
+.calfoot i.k.xt{background:var(--dim);margin-left:12px}
+textarea{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);
+  border-radius:4px;padding:10px 11px;width:100%;resize:vertical;line-height:1.5;font-size:13px}
+textarea:focus{outline:none;border-color:var(--fg)}
 </style>
 </head>
 <body>
@@ -199,6 +211,18 @@ const DEFAULTS = {
   v: 4,
   bw: 80,                                  // Körpergewicht für Klimmzüge
   sound: true,                             // Signalton am Pausenende
+  // Freiwilliger Zusatzblock. Zählt bewusst nicht in die Wochenserie:
+  // kein Pflichttraining, nur ein Haken für die Übersicht.
+  extra: {
+    name: 'Svens Block',
+    items: ['Glute Bridges 10x',
+            'Glute Walks 5 je Seite',
+            'Einbeinige Bridges 5 je Seite',
+            'Leg Raises angewinkelt 10x, unteren Rücken am Boden halten',
+            'Seitstütz 30 Sek. je Seite',
+            'Bulgarian Split Squats, schwaches Bein gibt vor, 10 bis 15'],
+    log: []                                // Tage als YYYY-MM-DD
+  },
   backupEvery: 3,                          // nach wie vielen Einheiten erinnert wird
   // Eine Ausrüstung, kein Umschalten. Der kleinste Schritt ist der gröbste,
   // den du irgendwo vorfindest, damit jede Last überall auflegbar ist.
@@ -240,6 +264,8 @@ function load(){
 
 // Fehlende Felder aus den DEFAULTS nachtragen, ohne Daten zu überschreiben
 function backfill(p){
+  if(!p.extra) p.extra = JSON.parse(JSON.stringify(DEFAULTS.extra));
+  if(!Array.isArray(p.extra.log)) p.extra.log = [];
   if(!p.equip) p.equip = JSON.parse(JSON.stringify(DEFAULTS.equip));
   const e = p.equip;
   if(!(e.step > 0)) e.step = 2.5;
@@ -396,8 +422,10 @@ function habit(){
     for(let j=0;j<7;j++){
       const d = new Date(first); d.setDate(first.getDate() + i*7 + j);
       const on = trained.has(d.toDateString());
-      cells += `<i class="${on?'on':''}${d.getTime()===today.getTime()?' now':''}${d>today?' fut':''}"
-        title="${d.toLocaleDateString('de-DE')}${on?' ·'+trained.get(d.toDateString()):''}"></i>`;
+      const xt = extraDone(d);
+      cells += `<i class="${on ? 'on' : xt ? 'xt' : ''}${d.getTime()===today.getTime()?' now':''}${d>today?' fut':''}"
+        title="${d.toLocaleDateString('de-DE')}${on?' ·'+trained.get(d.toDateString()):''}${
+          xt?' · '+st.extra.name:''}"></i>`;
     }
     cols += `<div class="col">${cells}</div>`;
   }
@@ -417,7 +445,7 @@ function habit(){
       <div class="dow"><em>Mo</em><em></em><em>Mi</em><em></em><em>Fr</em><em></em><em>So</em></div>
       ${cols}
     </div>
-    <div class="calfoot"><span>${first.toLocaleDateString('de-DE',{month:'short',year:'2-digit'})}</span>
+    <div class="calfoot"><span><i class="k on"></i>Training <i class="k xt"></i>${esc(st.extra.name)}</span>
       <span>${gap}</span></div></div>`;
 }
 
@@ -494,6 +522,19 @@ function vProg(){
 
 /* Was an dieser Übung im aktuellen Studio als Satz 1 aufliegen würde.
    Bewusst ohne Deload gerechnet: die Übersicht zeigt den Stand, nicht den Tag. */
+/* Freiwilliger Zusatzblock: ein Haken pro Tag, keine Wirkung auf die Serie. */
+function dayKey(d){
+  const p = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function extraDone(d){ return st.extra.log.includes(dayKey(d || new Date())); }
+function toggleExtra(){
+  const k = dayKey(new Date());
+  const i = st.extra.log.indexOf(k);
+  if(i >= 0) st.extra.log.splice(i,1); else st.extra.log.push(k);
+  save();
+}
+
 function cur1(ex){
   if(ex.mode === 'bw' && topOf(ex) === 0) return '<b>KG</b>';
   if(topOf(ex) === 0) return '<b class="none">kein Gewicht</b>';
@@ -526,6 +567,13 @@ function vHome(){
         <div class="rows">${d.ex.map(e => `<div>
           <em>${esc(e.name)}</em>${cur1(e)}</div>`).join('')}</div></button>`;
      }).join('')}
+    <div class="hr"></div>
+    <div class="eyebrow" style="margin-bottom:10px">Freiwillig</div>
+    <button class="card extra${extraDone() ? ' on' : ''}" data-extra="1">
+      <div class="hd"><h2>${esc(st.extra.name)}</h2>
+        <span>${extraDone() ? '&#10003; heute erledigt' : 'antippen wenn gemacht'}</span></div>
+      <div class="rows">${st.extra.items.map(i => `<div><em>${esc(i)}</em></div>`).join('')}</div>
+    </button>
     <div class="hr"></div>
     <button class="card" data-go='{"name":"prog"}'><h2>Fortschritt</h2>
       <p>Kraftkurven und geschätztes 1RM je Übung</p></button>
@@ -832,6 +880,14 @@ function vSettings(){
         <input type="number" inputmode="decimal" step="any" id="f-bw" value="${st.bw}"></div>
       <button class="btn primary" data-savebw="1">Speichern</button></div>
       <div class="hr"></div>
+      <div class="eyebrow" style="margin-bottom:8px">Freiwilliger Block</div>
+      <div class="ex" style="padding:16px">
+        <div class="field"><label>Name</label><input id="x-name" value="${esc(st.extra.name)}"></div>
+        <div class="field"><label>Übungen, eine je Zeile</label>
+          <textarea id="x-items" rows="7">${esc(st.extra.items.join('\n'))}</textarea></div>
+        <button class="btn primary" data-saveextra="1">Speichern</button>
+      </div>
+      <div class="hr"></div>
       <div class="eyebrow" style="margin-bottom:8px">Ausrüstung</div>
       <div class="ex" style="padding:16px">
         <div class="grid2">
@@ -948,7 +1004,7 @@ document.addEventListener('click', e => {
   if(st.rest && Date.now() > st.rest.end && !e.target.closest('.clock')){
     st.rest = null; save(); keepAwake(false);
   }
-  const t = e.target.closest('[data-go],[data-edit],[data-rep],[data-wt],[data-log],[data-finish],[data-savex],[data-savebw],[data-skip],[data-didbackup],[data-sound],[data-deload],[data-ex],[data-saveeq],[data-fix],[data-fixsave],[data-fixcancel],[data-hist],[data-hfix],[data-hsave],[data-hdel]');
+  const t = e.target.closest('[data-go],[data-edit],[data-rep],[data-wt],[data-log],[data-finish],[data-savex],[data-savebw],[data-skip],[data-didbackup],[data-sound],[data-deload],[data-ex],[data-saveeq],[data-extra],[data-saveextra],[data-fix],[data-fixsave],[data-fixcancel],[data-hist],[data-hfix],[data-hsave],[data-hdel]');
   if(!t) return;
 
   if(t.dataset.go){ const g = JSON.parse(t.dataset.go); view.fix = null;
@@ -956,6 +1012,14 @@ document.addEventListener('click', e => {
   if(t.dataset.edit){ view = {name:'edit', id:t.dataset.edit, dayId:view.id}; return render(); }
   if(t.dataset.deload){
     st.sess.deload = !st.sess.deload; save(); view.keep = window.scrollY; return render();
+  }
+  if(t.dataset.extra){ toggleExtra(); return render(); }
+  if(t.dataset.saveextra){
+    const n = document.getElementById('x-name').value.trim();
+    const it = document.getElementById('x-items').value.split('\n').map(x => x.trim()).filter(Boolean);
+    if(n) st.extra.name = n;
+    if(it.length) st.extra.items = it;
+    save(); return render();
   }
   if(t.dataset.saveeq){
     const num = id => parseFloat(String(document.getElementById(id).value).replace(',','.')) || 0;
